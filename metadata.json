@@ -1,0 +1,6 @@
+{
+  "name": "Dashboard - Task Management App",
+  "description": "A responsive task management dashboard featuring task tracking, progress metrics, status categorization, interactive task creation, and team collaboration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
