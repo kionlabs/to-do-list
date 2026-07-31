@@ -7,6 +7,7 @@ import { TaskCard } from './components/TaskCard';
 import { TaskStatusCard } from './components/TaskStatusCard';
 import { AddTaskModal } from './components/AddTaskModal';
 import { InviteModal } from './components/InviteModal';
+import { LoginPage } from './components/LoginPage';
 import { 
   FileText, 
   CheckSquare, 
@@ -15,11 +16,15 @@ import {
   AlertCircle, 
   FolderKanban, 
   Settings as SettingsIcon, 
-  HelpCircle,
-  Search
+  HelpCircle
 } from 'lucide-react';
 
+const AUTH_STORAGE_KEY = 'todo-list-authenticated';
+
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+  });
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
   const [activeTab, setActiveTab] = useState<NavTab>('Dashboard');
@@ -86,6 +91,29 @@ export default function App() {
     setTeamMembers((prev) => [...prev, newMember]);
   };
 
+  const handleLogin = (_username: string, rememberMe: boolean) => {
+    window.localStorage.setItem(AUTH_STORAGE_KEY, 'true');
+    if (rememberMe) {
+      window.localStorage.setItem('todo-list-remember-me', 'true');
+    } else {
+      window.localStorage.removeItem('todo-list-remember-me');
+    }
+    setIsAuthenticated(true);
+    window.history.replaceState(null, '', '/');
+  };
+
+  const handleLogout = () => {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    window.localStorage.removeItem('todo-list-remember-me');
+    setIsAuthenticated(false);
+    setIsMobileSidebarOpen(false);
+    window.history.replaceState(null, '', '/');
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 font-sans flex flex-col selection:bg-[#FF5252] selection:text-white">
       {/* Top Navigation Header */}
@@ -105,6 +133,7 @@ export default function App() {
             setActiveTab(tab);
             setIsMobileSidebarOpen(false);
           }}
+          onLogout={handleLogout}
           className="hidden lg:flex"
         />
 
@@ -121,6 +150,7 @@ export default function App() {
                 setActiveTab(tab);
                 setIsMobileSidebarOpen(false);
               }}
+              onLogout={handleLogout}
               className="relative z-50 my-0 ml-0 rounded-r-2xl"
             />
           </div>
