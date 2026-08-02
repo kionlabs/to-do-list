@@ -8,6 +8,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   createdAt: string;
+  dueDate?: string;
   completedAt?: string;
   imageUrl?: string;
   isVital?: boolean;

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
+import { CalendarDays, ImagePlus } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '../types';
-import { X, Plus, Image as ImageIcon } from 'lucide-react';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -8,189 +8,212 @@ interface AddTaskModalProps {
   onAddTask: (task: Omit<Task, 'id'>) => void;
 }
 
-const PRESET_IMAGES = [
-  { label: 'Party / Event', url: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=400' },
-  { label: 'Laptop Design', url: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=400' },
-  { label: 'Meeting', url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=400' },
-  { label: 'Dog / Pet', url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=400' },
-  { label: 'Office Team', url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=400' },
+const DEFAULT_IMAGE =
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400';
+
+const priorityOptions: { label: string; value: TaskPriority; color: string }[] = [
+  { label: 'Extreme', value: 'Vital', color: 'bg-red-500' },
+  { label: 'Moderate', value: 'Moderate', color: 'bg-sky-400' },
+  { label: 'Low', value: 'Low', color: 'bg-emerald-500' },
 ];
 
-export const AddTaskModal: React.FC<AddTaskModalProps> = ({
-  isOpen,
-  onClose,
-  onAddTask,
-}) => {
+const formatDate = (date: Date) => {
+  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}/${date.getFullYear()}`;
+};
+
+export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask }) => {
   const [title, setTitle] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [priority, setPriority] = useState<TaskPriority>('Vital');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('Moderate');
-  const [status, setStatus] = useState<TaskStatus>('Not Started');
   const [category, setCategory] = useState('Personal');
-  const [imageUrl, setImageUrl] = useState(PRESET_IMAGES[0].url);
+  const [status] = useState<TaskStatus>('Not Started');
+  const [imageUrl, setImageUrl] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+  const resetForm = () => {
+    setTitle('');
+    setDueDate('');
+    setPriority('Vital');
+    setDescription('');
+    setCategory('Personal');
+    setImageUrl('');
+  };
 
-    const today = new Date();
-    const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(
-      today.getMonth() + 1
-    ).padStart(2, '0')}/${today.getFullYear()}`;
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!title.trim() || !dueDate) return;
 
     onAddTask({
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       priority,
       status,
       category,
-      createdAt: formattedDate,
-      completedAt: status === 'Completed' ? 'Completed just now' : undefined,
-      imageUrl,
+      createdAt: formatDate(new Date()),
+      dueDate,
+      imageUrl: imageUrl || DEFAULT_IMAGE,
       isVital: priority === 'Vital',
     });
 
-    // Reset
-    setTitle('');
-    setDescription('');
-    setPriority('Moderate');
-    setStatus('Not Started');
+    resetForm();
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Modal Header */}
-        <div className="bg-[#FF5252] text-white px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-lg">
-            <Plus className="w-5 h-5" />
-            <span>Add New Task</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-[1px]">
+      <div className="w-full max-w-4xl rounded-md bg-white p-6 shadow-2xl sm:p-10">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Add New Task</h2>
+            <div className="mt-1 h-0.5 w-20 bg-[#FF5252]" />
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded-full transition-colors text-white"
+            className="text-sm font-bold text-slate-900 underline underline-offset-2 hover:text-[#FF5252]"
           >
-            <X className="w-5 h-5" />
+            Go Back
           </button>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Task Title *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Design Landing Page wireframe"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
-            />
-          </div>
+        <form onSubmit={handleSubmit}>
+          <div className="border border-slate-300 p-4">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-[1fr_240px]">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    className="h-10 w-full rounded border border-slate-400 px-3 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
+                  />
+                </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Provide clear task details..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20 resize-none"
-            />
-          </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">Date</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      required
+                      value={dueDate}
+                      onChange={(event) => setDueDate(event.target.value)}
+                      className="h-10 w-full rounded border border-slate-400 px-3 pr-10 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
+                    />
+                    <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Priority
-              </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#FF5252]"
-              >
-                <option value="Low">Low</option>
-                <option value="Moderate">Moderate</option>
-                <option value="High">High</option>
-                <option value="Vital">Vital ⭐</option>
-              </select>
+                <div>
+                  <span className="mb-2 block text-sm font-bold text-slate-900">Priority</span>
+                  <div className="flex flex-wrap items-center gap-8">
+                    {priorityOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 text-xs font-medium text-slate-500"
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${option.color}`} />
+                        {option.label}
+                        <input
+                          type="radio"
+                          name="priority"
+                          value={option.value}
+                          checked={priority === option.value}
+                          onChange={() => setPriority(option.value)}
+                          className="h-3.5 w-3.5 accent-[#FF5252]"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_220px]">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Task Description
+                    </label>
+                    <textarea
+                      rows={7}
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Start writing here....."
+                      className="w-full resize-none rounded border border-slate-400 px-4 py-3 text-sm outline-none placeholder:text-slate-300 focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Upload Image
+                    </label>
+                    <label className="flex h-[188px] cursor-pointer flex-col items-center justify-center rounded border border-slate-400 bg-white px-4 text-center transition hover:border-[#FF5252] hover:bg-red-50/40">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt="Selected task"
+                          className="h-full w-full rounded object-cover"
+                        />
+                      ) : (
+                        <>
+                          <ImagePlus className="mb-4 h-14 w-14 text-slate-400" />
+                          <span className="text-xs text-slate-400">Drag&Drop files here</span>
+                          <span className="my-2 text-xs text-slate-400">or</span>
+                          <span className="rounded border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-500">
+                            Browse
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="sr-only"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">Category</label>
+                  <select
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    className="h-10 w-full rounded border border-slate-400 px-3 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20 sm:w-64"
+                  >
+                    <option value="Personal">Personal</option>
+                    <option value="Design">Design</option>
+                    <option value="Business">Business</option>
+                    <option value="Development">Development</option>
+                  </select>
+                </div>
+              </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Initial Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#FF5252]"
-              >
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#FF5252]"
-            >
-              <option value="Personal">Personal</option>
-              <option value="Design">Design</option>
-              <option value="Business">Business</option>
-              <option value="Development">Development</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <ImageIcon className="w-4 h-4 text-[#FF5252]" />
-              Choose Thumbnail Image
-            </label>
-            <div className="grid grid-cols-5 gap-2 mt-1">
-              {PRESET_IMAGES.map((img, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setImageUrl(img.url)}
-                  className={`relative rounded-lg overflow-hidden h-14 border-2 transition-all ${
-                    imageUrl === img.url ? 'border-[#FF5252] ring-2 ring-[#FF5252]/30 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Action */}
-          <div className="pt-4 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#FF5252] hover:bg-[#ff3b3b] text-white font-bold text-sm shadow-md transition-all transform active:scale-95"
-            >
-              Create Task
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="mt-8 rounded-md bg-[#ff4b2b] px-8 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF5252]/30"
+          >
+            Done
+          </button>
         </form>
       </div>
     </div>

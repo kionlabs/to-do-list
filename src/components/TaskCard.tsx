@@ -149,6 +149,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         <div>
           {task.status === 'Completed' && task.completedAt ? (
             <span className="text-slate-400">{task.completedAt}</span>
+          ) : task.dueDate ? (
+            <span>Due on: <strong className="text-slate-600">{task.dueDate}</strong></span>
           ) : (
             <span>Created on: <strong className="text-slate-600">{task.createdAt}</strong></span>
           )}
