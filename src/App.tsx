@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { initialTasks, initialTeamMembers } from './data/initialData';
 import { Task, NavTab, TeamMember, TaskStatus } from './types';
 import { Header } from './components/Header';
@@ -8,6 +9,8 @@ import { TaskStatusCard } from './components/TaskStatusCard';
 import { AddTaskModal } from './components/AddTaskModal';
 import { InviteModal } from './components/InviteModal';
 import { LoginPage } from './components/LoginPage';
+import { SignUpPage } from './components/SignUpPage';
+import { supabase } from './lib/supabase';
 import { 
   FileText, 
   CheckSquare, 
@@ -19,11 +22,13 @@ import {
   HelpCircle
 } from 'lucide-react';
 
-const AUTH_STORAGE_KEY = 'todo-list-authenticated';
+type AuthView = 'signin' | 'signup';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authView, setAuthView] = useState<AuthView>(() => {
+    return window.location.pathname === '/signup' ? 'signup' : 'signin';
   });
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
@@ -34,6 +39,28 @@ export default function App() {
   // Modals
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) return;
+      setSession(data.session);
+      setIsAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setIsAuthLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Filter tasks based on search
   const filteredTasks = useMemo(() => {
@@ -91,27 +118,57 @@ export default function App() {
     setTeamMembers((prev) => [...prev, newMember]);
   };
 
-  const handleLogin = (_username: string, rememberMe: boolean) => {
-    window.localStorage.setItem(AUTH_STORAGE_KEY, 'true');
-    if (rememberMe) {
-      window.localStorage.setItem('todo-list-remember-me', 'true');
-    } else {
-      window.localStorage.removeItem('todo-list-remember-me');
+  const handleLogin = async (email: string, password: string, rememberMe: boolean) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return error.message;
     }
-    setIsAuthenticated(true);
+
+    if (!rememberMe) {
+      window.localStorage.removeItem('todo-list-remember-me');
+    } else {
+      window.localStorage.setItem('todo-list-remember-me', 'true');
+    }
+
     window.history.replaceState(null, '', '/');
+    return null;
   };
 
-  const handleLogout = () => {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     window.localStorage.removeItem('todo-list-remember-me');
-    setIsAuthenticated(false);
     setIsMobileSidebarOpen(false);
     window.history.replaceState(null, '', '/');
   };
 
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />;
+  const showSignUp = () => {
+    setAuthView('signup');
+    window.history.pushState(null, '', '/signup');
+  };
+
+  const showSignIn = () => {
+    setAuthView('signin');
+    window.history.pushState(null, '', '/');
+  };
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#ff6666] text-sm font-semibold text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!session) {
+    if (authView === 'signup') {
+      return <SignUpPage onSignIn={showSignIn} />;
+    }
+
+    return <LoginPage onLogin={handleLogin} onCreateAccount={showSignUp} />;
   }
 
   return (

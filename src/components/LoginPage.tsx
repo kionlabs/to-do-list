@@ -2,24 +2,26 @@ import React, { FormEvent, useState } from 'react';
 import { Lock, User } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (username: string, rememberMe: boolean) => void;
+  onLogin: (email: string, password: string, rememberMe: boolean) => Promise<string | null>;
+  onCreateAccount: () => void;
 }
 
 type LoginFormData = {
-  username: string;
+  email: string;
   password: string;
   rememberMe: boolean;
 };
 
 const initialLoginForm: LoginFormData = {
-  username: '',
+  email: '',
   password: '',
   rememberMe: false,
 };
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }) => {
   const [formData, setFormData] = useState<LoginFormData>(initialLoginForm);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateField = (field: keyof LoginFormData, value: string | boolean) => {
     setFormData((current) => ({
@@ -28,20 +30,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError('Please enter your username and password.');
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Please enter your email and password.');
       return;
     }
 
+    setIsSubmitting(true);
     setError('');
-    onLogin(formData.username.trim(), formData.rememberMe);
-  };
-
-  const goToSignUp = () => {
-    window.location.href = '/signup';
+    const loginError = await onLogin(
+      formData.email.trim(),
+      formData.password,
+      formData.rememberMe,
+    );
+    if (loginError) {
+      setError(loginError);
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -58,9 +65,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <User className="pointer-events-none absolute left-5 top-1/2 h-7 w-7 -translate-y-1/2 fill-slate-900 text-slate-900" />
                 <input
                   type="text"
-                  value={formData.username}
-                  onChange={(event) => updateField('username', event.target.value)}
-                  placeholder="Enter Username"
+                  value={formData.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="Enter Email"
                   className="h-16 w-full rounded-lg border border-slate-500 bg-white pl-20 pr-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                 />
               </label>
@@ -91,9 +98,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="mt-8 rounded-md bg-[#ff858b] px-12 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF5252]/30"
             >
-              Login
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
 
             <div className="mt-20 space-y-4 text-xl text-slate-800">
@@ -125,7 +133,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 Don&apos;t have an account?{' '}
                 <button
                   type="button"
-                  onClick={goToSignUp}
+                  onClick={onCreateAccount}
                   className="font-medium text-sky-600 hover:text-sky-700 hover:underline"
                 >
                   Create One
