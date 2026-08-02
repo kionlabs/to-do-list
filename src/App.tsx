@@ -5,6 +5,7 @@ import { Task, NavTab, TeamMember, TaskStatus } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { TaskCard } from './components/TaskCard';
+import { TaskDetailView } from './components/TaskDetailView';
 import { TaskStatusCard } from './components/TaskStatusCard';
 import { AddTaskModal } from './components/AddTaskModal';
 import { InviteModal } from './components/InviteModal';
@@ -90,6 +91,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('Dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
   // Modals
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
@@ -190,6 +192,15 @@ export default function App() {
         return t;
       })
     );
+    setSelectedTask((current) =>
+      current?.id === taskId
+        ? {
+            ...current,
+            status: newStatus,
+            completedAt: newStatus === 'Completed' ? 'Completed just now' : undefined,
+          }
+        : current,
+    );
 
     const { error } = await supabase
       .from('tasks')
@@ -206,6 +217,7 @@ export default function App() {
 
   const handleDeleteTask = async (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    setSelectedTask((current) => (current?.id === taskId ? null : current));
 
     const { error } = await supabase.from('tasks').delete().eq('id', taskId);
 
@@ -243,6 +255,14 @@ export default function App() {
 
     setTaskError('');
     setTasks((prev) => [mapTaskRow(data as TaskRow), ...prev]);
+  };
+
+  const handleOpenTask = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  const handleBackToTasks = () => {
+    setSelectedTask(null);
   };
 
   const handleInviteMember = (email: string) => {
@@ -402,7 +422,14 @@ export default function App() {
           </div>
 
           {/* TAB 1: MAIN DASHBOARD VIEW (Screenshot Replica) */}
-          {activeTab === 'Dashboard' && (
+          {selectedTask ? (
+            <TaskDetailView
+              task={selectedTask}
+              onBack={handleBackToTasks}
+              onDeleteTask={handleDeleteTask}
+              onStatusChange={handleStatusChange}
+            />
+          ) : activeTab === 'Dashboard' && (
             <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-sm">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
@@ -439,6 +466,7 @@ export default function App() {
                           onStatusChange={handleStatusChange}
                           onDeleteTask={handleDeleteTask}
                           onEditTask={() => setIsAddTaskModalOpen(true)}
+                          onOpenTask={handleOpenTask}
                         />
                       ))
                     ) : (
@@ -473,6 +501,7 @@ export default function App() {
                             task={task}
                             onStatusChange={handleStatusChange}
                             onDeleteTask={handleDeleteTask}
+                            onOpenTask={handleOpenTask}
                           />
                         ))
                       ) : (
@@ -506,6 +535,7 @@ export default function App() {
                     task={task}
                     onStatusChange={handleStatusChange}
                     onDeleteTask={handleDeleteTask}
+                    onOpenTask={handleOpenTask}
                   />
                 ))}
               </div>
@@ -535,6 +565,7 @@ export default function App() {
                     task={task}
                     onStatusChange={handleStatusChange}
                     onDeleteTask={handleDeleteTask}
+                    onOpenTask={handleOpenTask}
                   />
                 ))}
               </div>
@@ -559,6 +590,7 @@ export default function App() {
                           task={task}
                           onStatusChange={handleStatusChange}
                           onDeleteTask={handleDeleteTask}
+                          onOpenTask={handleOpenTask}
                         />
                       ))}
                       {catTasks.length === 0 && (

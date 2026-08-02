@@ -7,6 +7,7 @@ interface TaskCardProps {
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
   onDeleteTask: (taskId: string) => void;
   onEditTask?: (task: Task) => void;
+  onOpenTask?: (task: Task) => void;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -14,6 +15,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onStatusChange,
   onDeleteTask,
   onEditTask,
+  onOpenTask,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -66,9 +68,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </button>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-800 text-sm sm:text-base leading-snug">
+            <button
+              type="button"
+              onClick={() => onOpenTask?.(task)}
+              className="text-left font-bold text-slate-800 text-sm sm:text-base leading-snug hover:text-[#FF5252] transition-colors"
+            >
               {task.title}
-            </h3>
+            </button>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
