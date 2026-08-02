@@ -16,6 +16,20 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const currentDate = new Date();
+  const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const formattedDate = `${String(currentDate.getDate()).padStart(2, '0')}/${String(
+    currentDate.getMonth() + 1,
+  ).padStart(2, '0')}/${currentDate.getFullYear()}`;
+  const monthLabel = currentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+  const daysInMonth = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0,
+  ).getDate();
 
   const notifications = [
     { id: '1', text: "Meeting with client at 4 PM today", time: '10m ago', unread: true },
@@ -123,15 +137,15 @@ export const Header: React.FC<HeaderProps> = ({
           {showCalendar && (
             <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="text-center pb-2 border-b border-slate-100 mb-3">
-                <h3 className="font-bold text-slate-800 text-sm">June 2023</h3>
+                <h3 className="font-bold text-slate-800 text-sm">{monthLabel}</h3>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-400 mb-2">
                 <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-700 font-medium">
-                {Array.from({ length: 30 }).map((_, i) => {
+                {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
-                  const isToday = day === 20;
+                  const isToday = day === currentDate.getDate();
                   return (
                     <div
                       key={day}
@@ -152,8 +166,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Date Display */}
         <div className="hidden sm:flex flex-col text-right leading-tight pl-1">
-          <span className="text-xs font-semibold text-slate-700">Tuesday</span>
-          <span className="text-xs font-bold text-cyan-500">20/06/2023</span>
+          <span className="text-xs font-semibold text-slate-700">{weekday}</span>
+          <span className="text-xs font-bold text-cyan-500">{formattedDate}</span>
         </div>
       </div>
     </header>
