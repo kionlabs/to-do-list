@@ -24,6 +24,21 @@ import {
 
 type AuthView = 'signin' | 'signup';
 
+const getDisplayName = (session: Session | null) => {
+  const metadata = session?.user.user_metadata;
+  const fullName = [metadata?.first_name, metadata?.last_name].filter(Boolean).join(' ').trim();
+
+  return (
+    fullName ||
+    metadata?.full_name ||
+    metadata?.username ||
+    session?.user.email?.split('@')[0] ||
+    'User'
+  );
+};
+
+const getFirstName = (displayName: string) => displayName.split(' ')[0] || displayName;
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -79,6 +94,10 @@ export default function App() {
   const completedTasks = useMemo(() => {
     return filteredTasks.filter((t) => t.status === 'Completed');
   }, [filteredTasks]);
+
+  const currentUserName = useMemo(() => getDisplayName(session), [session]);
+  const currentUserFirstName = useMemo(() => getFirstName(currentUserName), [currentUserName]);
+  const currentUserEmail = session?.user.email ?? '';
 
   // Handlers
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
@@ -190,6 +209,8 @@ export default function App() {
             setActiveTab(tab);
             setIsMobileSidebarOpen(false);
           }}
+          userName={currentUserName}
+          userEmail={currentUserEmail}
           onLogout={handleLogout}
           className="hidden lg:flex"
         />
@@ -207,6 +228,8 @@ export default function App() {
                 setActiveTab(tab);
                 setIsMobileSidebarOpen(false);
               }}
+              userName={currentUserName}
+              userEmail={currentUserEmail}
               onLogout={handleLogout}
               className="relative z-50 my-0 ml-0 rounded-r-2xl"
             />
@@ -219,7 +242,7 @@ export default function App() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Welcome back, Sundar
+                Welcome back, {currentUserFirstName}
               </h1>
               <span className="text-3xl animate-bounce">👋</span>
             </div>
@@ -437,7 +460,8 @@ export default function App() {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name</label>
                   <input
                     type="text"
-                    defaultValue="Sundar Gurung"
+                    value={currentUserName}
+                    readOnly
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
                   />
                 </div>
@@ -445,7 +469,8 @@ export default function App() {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
                   <input
                     type="email"
-                    defaultValue="sundargurung360@gmail.com"
+                    value={currentUserEmail}
+                    readOnly
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
                   />
                 </div>
