@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useState } from 'react';
-import { CalendarDays, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '../types';
 
 interface AddTaskModalProps {
@@ -111,16 +111,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
 
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-900">Date</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      required
-                      value={dueDate}
-                      onChange={(event) => setDueDate(event.target.value)}
-                      className="h-10 w-full rounded border border-slate-400 px-3 pr-10 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
-                    />
-                    <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  </div>
+                  <input
+                    type="date"
+                    required
+                    value={dueDate}
+                    onChange={(event) => setDueDate(event.target.value)}
+                    className="h-10 w-full rounded border border-slate-400 px-3 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
+                  />
                 </div>
 
                 <div>

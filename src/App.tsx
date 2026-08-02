@@ -24,6 +24,20 @@ import {
 
 type AuthView = 'signin' | 'signup';
 
+type TaskRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: Task['priority'];
+  created_at: string;
+  due_date: string | null;
+  completed_at: string | null;
+  image_url: string | null;
+  is_vital: boolean | null;
+  category: string | null;
+};
+
 const getDisplayName = (session: Session | null) => {
   const metadata = session?.user.user_metadata;
   const fullName = [metadata?.first_name, metadata?.last_name].filter(Boolean).join(' ').trim();
@@ -39,13 +53,39 @@ const getDisplayName = (session: Session | null) => {
 
 const getFirstName = (displayName: string) => displayName.split(' ')[0] || displayName;
 
+const formatDisplayDate = (dateValue?: string | null) => {
+  if (!dateValue) return undefined;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return dateValue;
+
+  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}/${date.getFullYear()}`;
+};
+
+const mapTaskRow = (row: TaskRow): Task => ({
+  id: row.id,
+  title: row.title,
+  description: row.description ?? '',
+  status: row.status,
+  priority: row.priority,
+  createdAt: formatDisplayDate(row.created_at) ?? '',
+  dueDate: row.due_date ?? undefined,
+  completedAt: row.completed_at ? `Completed on ${formatDisplayDate(row.completed_at)}` : undefined,
+  imageUrl: row.image_url ?? undefined,
+  isVital: row.is_vital ?? false,
+  category: row.category ?? 'Personal',
+});
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authView, setAuthView] = useState<AuthView>(() => {
     return window.location.pathname === '/signup' ? 'signup' : 'signin';
   });
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskError, setTaskError] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
   const [activeTab, setActiveTab] = useState<NavTab>('Dashboard');
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +117,41 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session) {
+      setTasks([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadTasks = async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(
+          'id,title,description,status,priority,created_at,due_date,completed_at,image_url,is_vital,category',
+        )
+        .order('created_at', { ascending: false });
+
+      if (!isMounted) return;
+
+      if (error) {
+        setTaskError(error.message);
+        setTasks(initialTasks);
+        return;
+      }
+
+      setTaskError('');
+      setTasks((data ?? []).map((row) => mapTaskRow(row as TaskRow)));
+    };
+
+    loadTasks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session]);
+
   // Filter tasks based on search
   const filteredTasks = useMemo(() => {
     if (!searchQuery.trim()) return tasks;
@@ -100,7 +175,9 @@ export default function App() {
   const currentUserEmail = session?.user.email ?? '';
 
   // Handlers
-  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
+  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    const completedAt = newStatus === 'Completed' ? new Date().toISOString() : null;
+
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === taskId) {
@@ -113,18 +190,59 @@ export default function App() {
         return t;
       })
     );
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        status: newStatus,
+        completed_at: completedAt,
+      })
+      .eq('id', taskId);
+
+    if (error) {
+      setTaskError(error.message);
+    }
   };
 
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+
+    if (error) {
+      setTaskError(error.message);
+    }
   };
 
-  const handleAddTask = (newTaskData: Omit<Task, 'id'>) => {
-    const newTask: Task = {
-      ...newTaskData,
-      id: `task-${Date.now()}`,
-    };
-    setTasks((prev) => [newTask, ...prev]);
+  const handleAddTask = async (newTaskData: Omit<Task, 'id'>) => {
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: session.user.id,
+        title: newTaskData.title,
+        description: newTaskData.description,
+        status: newTaskData.status,
+        priority: newTaskData.priority,
+        category: newTaskData.category,
+        due_date: newTaskData.dueDate,
+        image_url: newTaskData.imageUrl,
+        is_vital: newTaskData.isVital ?? false,
+        completed_at: newTaskData.completedAt ? new Date().toISOString() : null,
+      })
+      .select(
+        'id,title,description,status,priority,created_at,due_date,completed_at,image_url,is_vital,category',
+      )
+      .single();
+
+    if (error) {
+      setTaskError(error.message);
+      return;
+    }
+
+    setTaskError('');
+    setTasks((prev) => [mapTaskRow(data as TaskRow), ...prev]);
   };
 
   const handleInviteMember = (email: string) => {
@@ -238,6 +356,12 @@ export default function App() {
 
         {/* Right Main Dashboard Workspace */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-full">
+          {taskError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+              {taskError}
+            </div>
+          )}
+
           {/* Greeting Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
