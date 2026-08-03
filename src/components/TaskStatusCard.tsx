@@ -26,7 +26,7 @@ export const TaskStatusCard: React.FC<TaskStatusCardProps> = ({ tasks }) => {
       {/* Title Header */}
       <div className="flex items-center gap-2 mb-6">
         <FileText className="w-5 h-5 text-[#FF5252]" />
-        <h2 className="font-bold text-[#FF5252] text-base">Task Status</h2>
+        <h2 className="font-bold text-[#FF5252] text-base">작업 현황</h2>
       </div>
 
       {/* 3 Donut Progress Charts */}
@@ -51,15 +51,15 @@ export const TaskStatusCard: React.FC<TaskStatusCardProps> = ({ tasks }) => {
       <div className="mt-6 pt-4 border-t border-slate-200/60 flex items-center justify-around text-xs font-bold text-slate-800">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          <span>Completed</span>
+          <span>완료</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-          <span>In Progress</span>
+          <span>진행 중</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-          <span>Not Started</span>
+          <span>시작 전</span>
         </div>
       </div>
     </div>

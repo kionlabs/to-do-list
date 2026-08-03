@@ -12,9 +12,9 @@ const DEFAULT_IMAGE =
   'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400';
 
 const priorityOptions: { label: string; value: TaskPriority; color: string }[] = [
-  { label: 'Extreme', value: 'Vital', color: 'bg-red-500' },
-  { label: 'Moderate', value: 'Moderate', color: 'bg-sky-400' },
-  { label: 'Low', value: 'Low', color: 'bg-emerald-500' },
+  { label: '긴급', value: 'Vital', color: 'bg-red-500' },
+  { label: '보통', value: 'Moderate', color: 'bg-sky-400' },
+  { label: '낮음', value: 'Low', color: 'bg-emerald-500' },
 ];
 
 const formatDate = (date: Date) => {
@@ -82,7 +82,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
       <div className="w-full max-w-4xl rounded-md bg-white p-6 shadow-2xl sm:p-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Add New Task</h2>
+            <h2 className="text-base font-bold text-slate-900">새 작업 추가</h2>
             <div className="mt-1 h-0.5 w-20 bg-[#FF5252]" />
           </div>
           <button
@@ -90,7 +90,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
             onClick={onClose}
             className="text-sm font-bold text-slate-900 underline underline-offset-2 hover:text-[#FF5252]"
           >
-            Go Back
+            돌아가기
           </button>
         </div>
 
@@ -99,7 +99,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
             <div className="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-[1fr_240px]">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-900">Title</label>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">제목</label>
                   <input
                     type="text"
                     required
@@ -110,7 +110,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-900">Date</label>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">날짜</label>
                   <input
                     type="date"
                     required
@@ -121,7 +121,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
                 </div>
 
                 <div>
-                  <span className="mb-2 block text-sm font-bold text-slate-900">Priority</span>
+                  <span className="mb-2 block text-sm font-bold text-slate-900">우선순위</span>
                   <div className="flex flex-wrap items-center gap-8">
                     {priorityOptions.map((option) => (
                       <label
@@ -146,35 +146,35 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_220px]">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-900">
-                      Task Description
+                      작업 설명
                     </label>
                     <textarea
                       rows={7}
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
-                      placeholder="Start writing here....."
+                      placeholder="작업 내용을 입력하세요..."
                       className="w-full resize-none rounded border border-slate-400 px-4 py-3 text-sm outline-none placeholder:text-slate-300 focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                     />
                   </div>
 
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-900">
-                      Upload Image
+                      이미지 업로드
                     </label>
                     <label className="flex h-[188px] cursor-pointer flex-col items-center justify-center rounded border border-slate-400 bg-white px-4 text-center transition hover:border-[#FF5252] hover:bg-red-50/40">
                       {imageUrl ? (
                         <img
                           src={imageUrl}
-                          alt="Selected task"
+                          alt="선택한 작업 이미지"
                           className="h-full w-full rounded object-cover"
                         />
                       ) : (
                         <>
                           <ImagePlus className="mb-4 h-14 w-14 text-slate-400" />
-                          <span className="text-xs text-slate-400">Drag&Drop files here</span>
-                          <span className="my-2 text-xs text-slate-400">or</span>
+                          <span className="text-xs text-slate-400">파일을 끌어다 놓으세요</span>
+                          <span className="my-2 text-xs text-slate-400">또는</span>
                           <span className="rounded border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-500">
-                            Browse
+                            찾아보기
                           </span>
                         </>
                       )}
@@ -189,16 +189,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-900">Category</label>
+                  <label className="mb-2 block text-sm font-bold text-slate-900">카테고리</label>
                   <select
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
                     className="h-10 w-full rounded border border-slate-400 px-3 text-sm outline-none focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20 sm:w-64"
                   >
-                    <option value="Personal">Personal</option>
-                    <option value="Design">Design</option>
-                    <option value="Business">Business</option>
-                    <option value="Development">Development</option>
+                    <option value="Personal">개인</option>
+                    <option value="Design">디자인</option>
+                    <option value="Business">업무</option>
+                    <option value="Development">개발</option>
                   </select>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
             type="submit"
             className="mt-8 rounded-md bg-[#ff4b2b] px-8 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF5252]/30"
           >
-            Done
+            완료
           </button>
         </form>
       </div>

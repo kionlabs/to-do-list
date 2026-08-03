@@ -39,7 +39,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5 font-bold text-slate-800 text-lg">
               <UserPlus className="w-5 h-5 text-[#FF5252]" />
-              <span>Invite Team Members</span>
+              <span>팀원 초대</span>
             </div>
             <button
               onClick={onClose}
@@ -50,13 +50,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
           </div>
 
           <p className="text-xs text-slate-500 mt-3 mb-4">
-            Invite colleagues to collaborate on tasks and share real-time updates on projects.
+            함께 작업할 팀원을 초대하고 프로젝트 진행 상황을 공유하세요.
           </p>
 
           <form onSubmit={handleSendInvite} className="space-y-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Email Address
+                이메일 주소
               </label>
               <div className="flex gap-2">
                 <input
@@ -74,11 +74,11 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 >
                   {invited ? (
                     <>
-                      <Check className="w-4 h-4" /> Sent!
+                      <Check className="w-4 h-4" /> 전송 완료
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" /> Send
+                      <Send className="w-4 h-4" /> 보내기
                     </>
                   )}
                 </button>
@@ -89,7 +89,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
           {/* Current Team Members List */}
           <div className="mt-6 pt-4 border-t border-slate-100">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-              Active Team Members ({teamMembers.length})
+              참여 중인 팀원 ({teamMembers.length})
             </h4>
             <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
               {teamMembers.map((member) => (
@@ -109,7 +109,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     </div>
                   </div>
                   <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    Member
+                    팀원
                   </span>
                 </div>
               ))}

@@ -12,6 +12,7 @@ import { InviteModal } from './components/InviteModal';
 import { LoginPage } from './components/LoginPage';
 import { SignUpPage } from './components/SignUpPage';
 import { supabase } from './lib/supabase';
+import { categoryLabels } from './utils/labels';
 import { 
   FileText, 
   CheckSquare, 
@@ -48,7 +49,7 @@ const getDisplayName = (session: Session | null) => {
     metadata?.full_name ||
     metadata?.username ||
     session?.user.email?.split('@')[0] ||
-    'User'
+    '사용자'
   );
 };
 
@@ -73,7 +74,7 @@ const mapTaskRow = (row: TaskRow): Task => ({
   priority: row.priority,
   createdAt: formatDisplayDate(row.created_at) ?? '',
   dueDate: row.due_date ?? undefined,
-  completedAt: row.completed_at ? `Completed on ${formatDisplayDate(row.completed_at)}` : undefined,
+  completedAt: row.completed_at ? `${formatDisplayDate(row.completed_at)} 완료` : undefined,
   imageUrl: row.image_url ?? undefined,
   isVital: row.is_vital ?? false,
   category: row.category ?? 'Personal',
@@ -186,7 +187,7 @@ export default function App() {
           return {
             ...t,
             status: newStatus,
-            completedAt: newStatus === 'Completed' ? 'Completed just now' : undefined,
+            completedAt: newStatus === 'Completed' ? '방금 완료됨' : undefined,
           };
         }
         return t;
@@ -197,7 +198,7 @@ export default function App() {
         ? {
             ...current,
             status: newStatus,
-            completedAt: newStatus === 'Completed' ? 'Completed just now' : undefined,
+            completedAt: newStatus === 'Completed' ? '방금 완료됨' : undefined,
           }
         : current,
     );
@@ -315,7 +316,7 @@ export default function App() {
   if (isAuthLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#ff6666] text-sm font-semibold text-white">
-        Loading...
+        불러오는 중...
       </div>
     );
   }
@@ -386,7 +387,7 @@ export default function App() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Welcome back, {currentUserFirstName}
+                {currentUserFirstName}님, 다시 오신 것을 환영합니다
               </h1>
               <span className="text-3xl animate-bounce">👋</span>
             </div>
@@ -416,7 +417,7 @@ export default function App() {
                 className="flex items-center gap-2 px-4 py-2 border-2 border-[#FF5252] text-[#FF5252] hover:bg-[#FF5252] hover:text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm transform active:scale-95"
               >
                 <UserPlus className="w-4 h-4" />
-                <span>+ Invite</span>
+                <span>+ 초대</span>
               </button>
             </div>
           </div>
@@ -439,7 +440,7 @@ export default function App() {
                   <div className="flex items-center justify-between pb-2">
                     <div className="flex items-center gap-2">
                       <FileText className="w-5 h-5 text-[#FF5252]" />
-                      <h2 className="font-bold text-[#FF5252] text-base sm:text-lg">To-Do</h2>
+                      <h2 className="font-bold text-[#FF5252] text-base sm:text-lg">할 일</h2>
                     </div>
 
                     <button
@@ -447,13 +448,13 @@ export default function App() {
                       className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#FF5252] hover:text-[#ff3b3b] hover:bg-red-50 px-3 py-1.5 rounded-xl transition-colors"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add task</span>
+                      <span>작업 추가</span>
                     </button>
                   </div>
 
                   {/* Sub-date label */}
                   <div className="text-xs font-semibold text-slate-400 border-b border-slate-100 pb-2">
-                    20 June <span className="text-slate-300">•</span> Today
+                    오늘의 할 일
                   </div>
 
                   {/* To-Do Tasks List */}
@@ -472,8 +473,8 @@ export default function App() {
                     ) : (
                       <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                         <CheckSquare className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                        <p className="text-sm font-semibold text-slate-500">No active tasks in To-Do</p>
-                        <p className="text-xs text-slate-400 mt-1">Click "+ Add task" to create a new task.</p>
+                        <p className="text-sm font-semibold text-slate-500">진행 중인 할 일이 없습니다</p>
+                        <p className="text-xs text-slate-400 mt-1">"+ 작업 추가"를 눌러 새 작업을 만들어보세요.</p>
                       </div>
                     )}
                   </div>
@@ -489,7 +490,7 @@ export default function App() {
                     {/* Header */}
                     <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200/60">
                       <CheckSquare className="w-5 h-5 text-[#FF5252]" />
-                      <h2 className="font-bold text-[#FF5252] text-base">Completed Task</h2>
+                      <h2 className="font-bold text-[#FF5252] text-base">완료한 작업</h2>
                     </div>
 
                     {/* Completed Tasks List */}
@@ -506,7 +507,7 @@ export default function App() {
                         ))
                       ) : (
                         <div className="text-center py-8 text-slate-400 text-xs italic">
-                          No completed tasks yet. Finish a task to see it here!
+                          아직 완료한 작업이 없습니다. 작업을 완료하면 여기에 표시됩니다.
                         </div>
                       )}
                     </div>
@@ -523,8 +524,8 @@ export default function App() {
               <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
                 <AlertCircle className="w-6 h-6 text-[#FF5252]" />
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Vital Tasks</h2>
-                  <p className="text-xs text-slate-500">High priority and critical deadline assignments.</p>
+                  <h2 className="text-xl font-bold text-slate-900">중요 작업</h2>
+                  <p className="text-xs text-slate-500">우선순위가 높거나 마감이 중요한 작업입니다.</p>
                 </div>
               </div>
 
@@ -547,14 +548,14 @@ export default function App() {
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">My Task List</h2>
-                  <p className="text-xs text-slate-500">All personal and team tasks assigned to you.</p>
+                  <h2 className="text-xl font-bold text-slate-900">내 작업 목록</h2>
+                  <p className="text-xs text-slate-500">내게 배정된 개인 및 팀 작업입니다.</p>
                 </div>
                 <button
                   onClick={() => setIsAddTaskModalOpen(true)}
                   className="bg-[#FF5252] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
                 >
-                  <Plus className="w-4 h-4" /> Add Task
+                  <Plus className="w-4 h-4" /> 작업 추가
                 </button>
               </div>
 
@@ -581,7 +582,7 @@ export default function App() {
                   <div key={cat} className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm">
                     <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
                       <FolderKanban className="w-5 h-5 text-[#FF5252]" />
-                      <h3 className="font-bold text-slate-900 text-lg">{cat} Tasks ({catTasks.length})</h3>
+                      <h3 className="font-bold text-slate-900 text-lg">{categoryLabels[cat] ?? cat} 작업 ({catTasks.length})</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {catTasks.map((task) => (
@@ -594,7 +595,7 @@ export default function App() {
                         />
                       ))}
                       {catTasks.length === 0 && (
-                        <p className="text-xs text-slate-400 italic">No tasks in this category.</p>
+                        <p className="text-xs text-slate-400 italic">이 카테고리에 등록된 작업이 없습니다.</p>
                       )}
                     </div>
                   </div>
@@ -608,12 +609,12 @@ export default function App() {
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm max-w-2xl">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
                 <SettingsIcon className="w-6 h-6 text-[#FF5252]" />
-                <h2 className="text-xl font-bold text-slate-900">Account Settings</h2>
+                <h2 className="text-xl font-bold text-slate-900">계정 설정</h2>
               </div>
 
               <div className="space-y-5 text-sm">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">이름</label>
                   <input
                     type="text"
                     value={currentUserName}
@@ -622,7 +623,7 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">이메일 주소</label>
                   <input
                     type="email"
                     value={currentUserEmail}
@@ -631,7 +632,7 @@ export default function App() {
                   />
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700">Email Notifications</span>
+                  <span className="font-semibold text-slate-700">이메일 알림</span>
                   <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#FF5252]" />
                 </div>
               </div>
@@ -643,20 +644,20 @@ export default function App() {
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm max-w-2xl">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
                 <HelpCircle className="w-6 h-6 text-[#FF5252]" />
-                <h2 className="text-xl font-bold text-slate-900">Help & User Guide</h2>
+                <h2 className="text-xl font-bold text-slate-900">도움말 및 사용 가이드</h2>
               </div>
 
               <div className="space-y-4 text-sm text-slate-600">
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <h4 className="font-bold text-slate-800 mb-1">How to change task status?</h4>
+                  <h4 className="font-bold text-slate-800 mb-1">작업 상태는 어떻게 바꾸나요?</h4>
                   <p className="text-xs leading-relaxed">
-                    Click the circle icon on any task card to quickly toggle between Not Started, In Progress, and Completed states. Donut progress metrics update automatically.
+                    작업 카드의 원형 아이콘을 클릭하면 시작 전, 진행 중, 완료 상태로 빠르게 변경할 수 있습니다. 진행률도 자동으로 업데이트됩니다.
                   </p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <h4 className="font-bold text-slate-800 mb-1">How to invite team members?</h4>
+                  <h4 className="font-bold text-slate-800 mb-1">팀원은 어떻게 초대하나요?</h4>
                   <p className="text-xs leading-relaxed">
-                    Click the "+ Invite" button near your welcome greeting to open the invitation dialog and share projects with team members.
+                    환영 문구 옆의 "+ 초대" 버튼을 클릭하면 초대 창을 열고 팀원과 작업을 함께 관리할 수 있습니다.
                   </p>
                 </div>
               </div>

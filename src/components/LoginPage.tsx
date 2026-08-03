@@ -34,7 +34,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
     event.preventDefault();
 
     if (!formData.email.trim() || !formData.password.trim()) {
-      setError('Please enter your email and password.');
+      setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
@@ -57,7 +57,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
         <div className="grid w-full grid-cols-1 items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
             <h1 className="mb-8 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-              Sign In
+              로그인
             </h1>
 
             <div className="space-y-6">
@@ -67,7 +67,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
                   type="text"
                   value={formData.email}
                   onChange={(event) => updateField('email', event.target.value)}
-                  placeholder="Enter Email"
+                  placeholder="이메일을 입력하세요"
                   className="h-16 w-full rounded-lg border border-slate-500 bg-white pl-20 pr-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                 />
               </label>
@@ -78,7 +78,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
                   type="password"
                   value={formData.password}
                   onChange={(event) => updateField('password', event.target.value)}
-                  placeholder="Enter Password"
+                  placeholder="비밀번호를 입력하세요"
                   className="h-16 w-full rounded-lg border border-slate-500 bg-white pl-20 pr-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                 />
               </label>
@@ -91,7 +91,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
                 onChange={(event) => updateField('rememberMe', event.target.checked)}
                 className="h-5 w-5 rounded border-slate-500 accent-[#FF5252]"
               />
-              Remember Me
+              로그인 상태 유지
             </label>
 
             {error && <p className="mt-4 text-sm font-semibold text-[#FF5252]">{error}</p>}
@@ -101,42 +101,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCreateAccount }
               disabled={isSubmitting}
               className="mt-8 rounded-md bg-[#ff858b] px-12 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF5252]/30"
             >
-              {isSubmitting ? 'Logging in...' : 'Login'}
+              {isSubmitting ? '로그인 중...' : '로그인'}
             </button>
 
             <div className="mt-20 space-y-4 text-xl text-slate-800">
               <div className="flex flex-wrap items-center gap-4">
-                <span>Or, Login with</span>
+                <span>다른 계정으로 로그인</span>
                 <button
                   type="button"
-                  aria-label="Login with Facebook"
+                  aria-label="Facebook으로 로그인"
                   className="flex h-8 w-8 items-center justify-center rounded-sm bg-[#4267B2] text-2xl font-bold text-white"
                 >
                   f
                 </button>
                 <button
                   type="button"
-                  aria-label="Login with Google"
+                  aria-label="Google로 로그인"
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-2xl font-bold shadow-sm ring-1 ring-slate-200"
                 >
                   <span className="text-[#4285F4]">G</span>
                 </button>
                 <button
                   type="button"
-                  aria-label="Login with X"
+                  aria-label="X로 로그인"
                   className="flex h-8 w-8 items-center justify-center rounded-sm bg-black text-xl font-bold text-white"
                 >
                   X
                 </button>
               </div>
               <p>
-                Don&apos;t have an account?{' '}
+                계정이 없으신가요?{' '}
                 <button
                   type="button"
                   onClick={onCreateAccount}
                   className="font-medium text-sky-600 hover:text-sky-700 hover:underline"
                 >
-                  Create One
+                  회원가입
                 </button>
               </p>
             </div>

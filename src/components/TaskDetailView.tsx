@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, Edit3, Trash2 } from 'lucide-react';
 import { Task, TaskStatus } from '../types';
+import { priorityLabels, statusLabels } from '../utils/labels';
 
 interface TaskDetailViewProps {
   task: Task;
@@ -42,17 +43,17 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">{task.title}</h2>
               <p className="mt-4 text-sm text-slate-700">
-                Priority:{' '}
-                <span className="font-semibold text-sky-500">{task.priority}</span>
+                우선순위:{' '}
+                <span className="font-semibold text-sky-500">{priorityLabels[task.priority]}</span>
               </p>
               <p className="mt-2 text-sm text-slate-700">
-                Status:{' '}
+                상태:{' '}
                 <span className={`font-semibold ${getStatusColor(task.status)}`}>
-                  {task.status}
+                  {statusLabels[task.status]}
                 </span>
               </p>
               <p className="mt-3 text-xs text-slate-400">
-                {task.dueDate ? `Due on: ${task.dueDate}` : `Created on: ${task.createdAt}`}
+                {task.dueDate ? `마감일: ${task.dueDate}` : `생성일: ${task.createdAt}`}
               </p>
             </div>
 
@@ -61,7 +62,7 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
               onClick={onBack}
               className="shrink-0 text-sm font-bold text-slate-900 underline underline-offset-2 hover:text-[#FF5252]"
             >
-              Go Back
+              돌아가기
             </button>
           </div>
         </div>
@@ -71,7 +72,7 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
         {descriptionLines.length > 0 ? (
           descriptionLines.map((line, index) => <p key={`${line}-${index}`}>{line}</p>)
         ) : (
-          <p>No task description has been added yet.</p>
+          <p>아직 작업 설명이 등록되지 않았습니다.</p>
         )}
       </div>
 
@@ -80,14 +81,14 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
           type="button"
           onClick={() => onDeleteTask(task.id)}
           className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#FF5252] text-white shadow-sm transition hover:bg-[#ff3b3b]"
-          aria-label="Delete task"
+          aria-label="작업 삭제"
         >
           <Trash2 className="h-5 w-5" />
         </button>
         <button
           type="button"
           className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#FF5252] text-white shadow-sm transition hover:bg-[#ff3b3b]"
-          aria-label="Edit task"
+          aria-label="작업 수정"
         >
           <Edit3 className="h-5 w-5" />
         </button>
@@ -97,7 +98,7 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
             onStatusChange(task.id, task.status === 'Completed' ? 'Not Started' : 'Completed')
           }
           className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#FF5252] text-white shadow-sm transition hover:bg-[#ff3b3b]"
-          aria-label="Toggle completion"
+          aria-label="완료 상태 변경"
         >
           <AlertCircle className="h-5 w-5" />
         </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Task, TaskStatus } from '../types';
 import { MoreHorizontal, Trash2, Edit3, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { priorityLabels, statusLabels } from '../utils/labels';
 
 interface TaskCardProps {
   task: Task;
@@ -62,7 +63,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <button
             onClick={toggleNextStatus}
             className="mt-0.5 shrink-0 hover:scale-110 transition-transform"
-            title={`Current status: ${task.status}. Click to change.`}
+            title={`현재 상태: ${statusLabels[task.status]}. 클릭하면 상태가 변경됩니다.`}
           >
             {getStatusIcon()}
           </button>
@@ -95,7 +96,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
-            aria-label="Task options"
+            aria-label="작업 옵션"
           >
             <MoreHorizontal className="w-5 h-5" />
           </button>
@@ -114,7 +115,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
-                  Edit Task
+                  작업 수정
                 </button>
               )}
               <button
@@ -125,7 +126,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2"
               >
                 <Clock className="w-3.5 h-3.5" />
-                Change Status
+                상태 변경
               </button>
               <button
                 onClick={() => {
@@ -135,7 +136,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600 flex items-center gap-2"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Delete
+                삭제
               </button>
             </div>
           )}
@@ -146,19 +147,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
         <div className="flex items-center gap-3 flex-wrap">
           <span>
-            Priority: <strong className="text-slate-700">{task.priority}</strong>
+            우선순위: <strong className="text-slate-700">{priorityLabels[task.priority]}</strong>
           </span>
           <span>
-            Status: <span className={getStatusBadgeColor(task.status)}>{task.status}</span>
+            상태: <span className={getStatusBadgeColor(task.status)}>{statusLabels[task.status]}</span>
           </span>
         </div>
         <div>
           {task.status === 'Completed' && task.completedAt ? (
             <span className="text-slate-400">{task.completedAt}</span>
           ) : task.dueDate ? (
-            <span>Due on: <strong className="text-slate-600">{task.dueDate}</strong></span>
+            <span>마감일: <strong className="text-slate-600">{task.dueDate}</strong></span>
           ) : (
-            <span>Created on: <strong className="text-slate-600">{task.createdAt}</strong></span>
+            <span>생성일: <strong className="text-slate-600">{task.createdAt}</strong></span>
           )}
         </div>
       </div>

@@ -48,17 +48,17 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
       !formData.email.trim() ||
       !formData.password.trim()
     ) {
-      setMessage('Please fill in all required fields.');
+      setMessage('필수 정보를 모두 입력해주세요.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setMessage('Passwords do not match.');
+      setMessage('비밀번호가 일치하지 않습니다.');
       return;
     }
 
     if (!formData.agreedToTerms) {
-      setMessage('Please agree to all terms before registering.');
+      setMessage('약관에 동의한 후 가입할 수 있습니다.');
       return;
     }
 
@@ -102,8 +102,8 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
     setFormData(initialFormData);
     setMessage(
       data.session
-        ? 'Registration complete. You are now signed in.'
-        : 'Registration complete. Please check your email to confirm your account.',
+        ? '회원가입이 완료되었습니다. 바로 로그인되었습니다.'
+        : '회원가입이 완료되었습니다. 이메일 인증을 확인해주세요.',
     );
     setIsSubmitting(false);
   };
@@ -149,7 +149,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
           <div className="flex items-center justify-center px-6 py-10 sm:px-10">
             <form onSubmit={handleSubmit} className="w-full max-w-md">
               <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-slate-900">
-                Sign Up
+                회원가입
               </h1>
 
               <div className="space-y-4">
@@ -159,7 +159,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="text"
                     value={formData.firstName}
                     onChange={(event) => updateField('firstName', event.target.value)}
-                    placeholder="Enter First Name"
+                    placeholder="이름을 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -170,7 +170,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="text"
                     value={formData.lastName}
                     onChange={(event) => updateField('lastName', event.target.value)}
-                    placeholder="Enter Last Name"
+                    placeholder="성을 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -181,7 +181,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="text"
                     value={formData.username}
                     onChange={(event) => updateField('username', event.target.value)}
-                    placeholder="Enter Username"
+                    placeholder="사용자 이름을 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -192,7 +192,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="email"
                     value={formData.email}
                     onChange={(event) => updateField('email', event.target.value)}
-                    placeholder="Enter Email"
+                    placeholder="이메일을 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -203,7 +203,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="password"
                     value={formData.password}
                     onChange={(event) => updateField('password', event.target.value)}
-                    placeholder="Enter Password"
+                    placeholder="비밀번호를 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -214,7 +214,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(event) => updateField('confirmPassword', event.target.value)}
-                    placeholder="Confirm Password"
+                    placeholder="비밀번호를 다시 입력하세요"
                     className="h-12 w-full rounded border border-slate-400 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-[#FF5252] focus:ring-2 focus:ring-[#FF5252]/20"
                   />
                 </label>
@@ -227,13 +227,13 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                   onChange={(event) => updateField('agreedToTerms', event.target.checked)}
                   className="h-4 w-4 rounded border-slate-400 accent-[#FF5252]"
                 />
-                I agree to all terms
+                이용약관에 동의합니다
               </label>
 
               {message && (
                 <p
                   className={`mt-3 text-sm font-medium ${
-                    message.includes('ready') ? 'text-emerald-600' : 'text-[#FF5252]'
+                    message.includes('완료') ? 'text-emerald-600' : 'text-[#FF5252]'
                   }`}
                 >
                   {message}
@@ -245,17 +245,17 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignIn }) => {
                 disabled={isSubmitting}
                 className="mt-4 rounded bg-[#ff7a7a] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#FF5252] focus:outline-none focus:ring-2 focus:ring-[#FF5252]/30"
               >
-                {isSubmitting ? 'Registering...' : 'Register'}
+                {isSubmitting ? '가입 중...' : '가입하기'}
               </button>
 
               <p className="mt-5 text-sm text-slate-700">
-                Already have an account?{' '}
+                이미 계정이 있으신가요?{' '}
                 <button
                   type="button"
                   onClick={onSignIn}
                   className="font-medium text-sky-600 hover:text-sky-700 hover:underline"
                 >
-                  Sign In
+                  로그인
                 </button>
               </p>
             </form>

@@ -9,6 +9,7 @@ import {
   HelpCircle, 
   LogOut 
 } from 'lucide-react';
+import { navLabels } from '../utils/labels';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -23,19 +24,19 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
-  userEmail = 'sundargurung360@gmail.com',
-  userName = 'Sundar Gurung',
+  userEmail = 'user@example.com',
+  userName = '사용자',
   avatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
   onLogout,
   className = '',
 }) => {
   const navItems: { tab: NavTab; label: string; icon: React.ReactNode }[] = [
-    { tab: 'Dashboard', label: 'Dashboard', icon: <LayoutGrid className="w-5 h-5" /> },
-    { tab: 'Vital Task', label: 'Vital Task', icon: <AlertCircle className="w-5 h-5" /> },
-    { tab: 'My Task', label: 'My Task', icon: <CheckSquare className="w-5 h-5" /> },
-    { tab: 'Task Categories', label: 'Task Categories', icon: <ListFilter className="w-5 h-5" /> },
-    { tab: 'Settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-    { tab: 'Help', label: 'Help', icon: <HelpCircle className="w-5 h-5" /> },
+    { tab: 'Dashboard', label: navLabels.Dashboard, icon: <LayoutGrid className="w-5 h-5" /> },
+    { tab: 'Vital Task', label: navLabels['Vital Task'], icon: <AlertCircle className="w-5 h-5" /> },
+    { tab: 'My Task', label: navLabels['My Task'], icon: <CheckSquare className="w-5 h-5" /> },
+    { tab: 'Task Categories', label: navLabels['Task Categories'], icon: <ListFilter className="w-5 h-5" /> },
+    { tab: 'Settings', label: navLabels.Settings, icon: <Settings className="w-5 h-5" /> },
+    { tab: 'Help', label: navLabels.Help, icon: <HelpCircle className="w-5 h-5" /> },
   ];
 
   return (
@@ -83,11 +84,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Logout Button */}
       <div className="pt-6 border-t border-white/20">
         <button
-          onClick={onLogout || (() => alert('Logged out successfully'))}
+          onClick={onLogout || (() => alert('로그아웃되었습니다.'))}
           className="w-full flex items-center gap-3.5 px-4 py-3 text-white/90 hover:text-white hover:bg-white/15 rounded-2xl text-sm font-semibold transition-colors"
         >
           <LogOut className="w-5 h-5 text-white" />
-          <span>Logout</span>
+          <span>로그아웃</span>
         </button>
       </div>
     </aside>
