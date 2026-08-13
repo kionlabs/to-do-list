@@ -682,6 +682,12 @@ export default function App() {
             />
           ) : activeTab === 'Dashboard' && (
             <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-sm">
+              <TaskCalendar
+                tasks={tasks}
+                onOpenTask={handleOpenTask}
+                onAddTask={handleOpenAddTask}
+              />
+
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* LEFT COLUMN: TO-DO TASKS (Span 7) */}
@@ -765,12 +771,6 @@ export default function App() {
                 </div>
 
               </div>
-
-              <TaskCalendar
-                tasks={tasks}
-                onOpenTask={handleOpenTask}
-                onAddTask={handleOpenAddTask}
-              />
             </div>
           )}
 
