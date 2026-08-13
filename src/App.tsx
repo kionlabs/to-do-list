@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
-import { initialTasks, initialTeamMembers } from './data/initialData';
+import { initialTeamMembers } from './data/initialData';
 import { Task, NavTab, TeamMember, TaskStatus } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -197,18 +197,26 @@ export default function App() {
     let isMounted = true;
 
     const loadTasks = async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(
-          'id,title,description,status,priority,created_at,due_date,completed_at,image_url,is_vital,category',
-        )
-        .order('created_at', { ascending: false });
+      const fetchTasks = () =>
+        supabase.from('tasks').select('*').order('created_at', { ascending: false });
+
+      let { data, error } = await fetchTasks();
+
+      // 브라우저에 남아 있는 만료 세션은 작업 조회에서 400 오류를 낼 수 있어, 한 번 갱신 후 재시도한다.
+      if (error) {
+        const { data: refreshedAuth, error: refreshError } = await supabase.auth.refreshSession();
+
+        if (!refreshError && refreshedAuth.session) {
+          setSession(refreshedAuth.session);
+          ({ data, error } = await fetchTasks());
+        }
+      }
 
       if (!isMounted) return;
 
       if (error) {
-        setTaskError(error.message);
-        setTasks(initialTasks);
+        setTaskError('작업 정보를 불러오지 못했습니다. 잠시 후 페이지를 새로고침해주세요.');
+        setTasks([]);
         return;
       }
 
