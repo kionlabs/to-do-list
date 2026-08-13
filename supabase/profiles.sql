@@ -4,8 +4,20 @@ create table if not exists public.profiles (
   last_name text,
   username text unique,
   email text,
-  created_at timestamptz default now()
+  phone text,
+  avatar_url text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
+
+alter table public.profiles
+add column if not exists phone text;
+
+alter table public.profiles
+add column if not exists avatar_url text;
+
+alter table public.profiles
+add column if not exists updated_at timestamptz default now();
 
 alter table public.profiles enable row level security;
 
@@ -26,3 +38,19 @@ create policy "Users can update own profile"
 on public.profiles
 for update
 using (auth.uid() = id);
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_profiles_updated_at on public.profiles;
+create trigger set_profiles_updated_at
+before update on public.profiles
+for each row
+execute function public.set_updated_at();

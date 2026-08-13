@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { initialTasks, initialTeamMembers } from './data/initialData';
 import { Task, NavTab, TeamMember, TaskStatus } from './types';
@@ -40,6 +40,30 @@ type TaskRow = {
   category: string | null;
 };
 
+type ProfileRow = {
+  first_name: string | null;
+  last_name: string | null;
+  username: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+};
+
+type ProfileForm = {
+  fullName: string;
+  email: string;
+  phone: string;
+  avatarUrl: string;
+};
+
+type PasswordForm = {
+  newPassword: string;
+  confirmPassword: string;
+};
+
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
+
 const getDisplayName = (session: Session | null) => {
   const metadata = session?.user.user_metadata;
   const fullName = [metadata?.first_name, metadata?.last_name].filter(Boolean).join(' ').trim();
@@ -54,6 +78,27 @@ const getDisplayName = (session: Session | null) => {
 };
 
 const getFirstName = (displayName: string) => displayName.split(' ')[0] || displayName;
+
+const getAvatarUrl = (session: Session | null) => {
+  const metadata = session?.user.user_metadata;
+  return metadata?.avatar_url || metadata?.picture || DEFAULT_AVATAR;
+};
+
+const splitFullName = (fullName: string) => {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return { firstName: '', lastName: '' };
+  }
+
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '' };
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(' '),
+  };
+};
 
 const formatDisplayDate = (dateValue?: string | null) => {
   if (!dateValue) return undefined;
@@ -93,6 +138,21 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
+    fullName: '',
+    email: '',
+    phone: '',
+    avatarUrl: DEFAULT_AVATAR,
+  });
+  const [profileMessage, setProfileMessage] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isPasswordPanelOpen, setIsPasswordPanelOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   
   // Modals
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
@@ -123,6 +183,12 @@ export default function App() {
   useEffect(() => {
     if (!session) {
       setTasks([]);
+      setProfileForm({
+        fullName: '',
+        email: '',
+        phone: '',
+        avatarUrl: DEFAULT_AVATAR,
+      });
       return;
     }
 
@@ -155,6 +221,52 @@ export default function App() {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (!session) return;
+
+    let isMounted = true;
+
+    const baseProfile: ProfileForm = {
+      fullName: getDisplayName(session),
+      email: session.user.email ?? '',
+      phone: session.user.user_metadata?.phone ?? '',
+      avatarUrl: getAvatarUrl(session),
+    };
+
+    setProfileForm(baseProfile);
+
+    const loadProfile = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name,last_name,username,email,phone,avatar_url')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (!isMounted) return;
+
+      if (error) {
+        setProfileForm(baseProfile);
+        return;
+      }
+
+      const profile = data as ProfileRow | null;
+      const profileName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+
+      setProfileForm({
+        fullName: profileName || baseProfile.fullName,
+        email: profile?.email || baseProfile.email,
+        phone: profile?.phone || baseProfile.phone,
+        avatarUrl: profile?.avatar_url || baseProfile.avatarUrl,
+      });
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session]);
+
   // Filter tasks based on search
   const filteredTasks = useMemo(() => {
     if (!searchQuery.trim()) return tasks;
@@ -173,9 +285,14 @@ export default function App() {
     return filteredTasks.filter((t) => t.status === 'Completed');
   }, [filteredTasks]);
 
-  const currentUserName = useMemo(() => getDisplayName(session), [session]);
+  const currentUserName = useMemo(
+    () => profileForm.fullName.trim() || getDisplayName(session),
+    [profileForm.fullName, session],
+  );
   const currentUserFirstName = useMemo(() => getFirstName(currentUserName), [currentUserName]);
-  const currentUserEmail = session?.user.email ?? '';
+  const currentUserEmail = profileForm.email || session?.user.email || '';
+  const currentUserPhone = profileForm.phone;
+  const currentUserAvatar = profileForm.avatarUrl || getAvatarUrl(session);
 
   // Handlers
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
@@ -276,6 +393,130 @@ export default function App() {
     setTeamMembers((prev) => [...prev, newMember]);
   };
 
+  const handleProfileFieldChange = (field: keyof ProfileForm, value: string) => {
+    setProfileForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+    setProfileMessage('');
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        handleProfileFieldChange('avatarUrl', reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!session) return;
+
+    const fullName = profileForm.fullName.trim();
+    const email = profileForm.email.trim();
+    const phone = profileForm.phone.trim();
+
+    if (!fullName || !email) {
+      setProfileMessage('이름과 이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    const { firstName, lastName } = splitFullName(fullName);
+
+    setIsSavingProfile(true);
+    setProfileMessage('');
+
+    const authPayload: Parameters<typeof supabase.auth.updateUser>[0] = {
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        full_name: fullName,
+        phone,
+        avatar_url: profileForm.avatarUrl,
+      },
+    };
+
+    if (email !== session.user.email) {
+      authPayload.email = email;
+    }
+
+    const { error: authError } = await supabase.auth.updateUser(authPayload);
+
+    if (authError) {
+      setProfileMessage(authError.message);
+      setIsSavingProfile(false);
+      return;
+    }
+
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: session.user.id,
+      first_name: firstName,
+      last_name: lastName,
+      username: session.user.user_metadata?.username ?? null,
+      email,
+      phone,
+      avatar_url: profileForm.avatarUrl,
+    });
+
+    if (profileError) {
+      setProfileMessage(profileError.message);
+      setIsSavingProfile(false);
+      return;
+    }
+
+    setProfileForm((current) => ({
+      ...current,
+      fullName,
+      email,
+      phone,
+    }));
+    setProfileMessage(
+      email !== session.user.email
+        ? '프로필이 저장되었습니다. 변경한 이메일은 인증 메일 확인 후 적용됩니다.'
+        : '프로필 정보가 저장되었습니다.',
+    );
+    setIsSavingProfile(false);
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordMessage('새 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage('비밀번호는 6자 이상이어야 합니다.');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    setPasswordMessage('');
+
+    const { error } = await supabase.auth.updateUser({
+      password: passwordForm.newPassword,
+    });
+
+    if (error) {
+      setPasswordMessage(error.message);
+      setIsUpdatingPassword(false);
+      return;
+    }
+
+    setPasswordForm({ newPassword: '', confirmPassword: '' });
+    setPasswordMessage('비밀번호가 변경되었습니다.');
+    setIsUpdatingPassword(false);
+  };
+
   const handleLogin = async (email: string, password: string, rememberMe: boolean) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -350,6 +591,7 @@ export default function App() {
           }}
           userName={currentUserName}
           userEmail={currentUserEmail}
+          avatarUrl={currentUserAvatar}
           onLogout={handleLogout}
           className="hidden lg:flex"
         />
@@ -369,6 +611,7 @@ export default function App() {
               }}
               userName={currentUserName}
               userEmail={currentUserEmail}
+              avatarUrl={currentUserAvatar}
               onLogout={handleLogout}
               className="relative z-50 my-0 ml-0 rounded-r-2xl"
             />
@@ -606,19 +849,41 @@ export default function App() {
 
           {/* TAB 5: SETTINGS VIEW */}
           {activeTab === 'Settings' && (
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm max-w-2xl">
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm max-w-3xl">
               <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
                 <SettingsIcon className="w-6 h-6 text-[#FF5252]" />
                 <h2 className="text-xl font-bold text-slate-900">계정 설정</h2>
               </div>
 
-              <div className="space-y-5 text-sm">
+              <div className="space-y-6 text-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <img
+                    src={currentUserAvatar}
+                    alt={currentUserName}
+                    className="h-24 w-24 rounded-full object-cover border-4 border-red-100 shadow-sm"
+                  />
+                  <div>
+                    <label className="inline-flex cursor-pointer items-center rounded-xl border border-[#FF5252] px-4 py-2 text-xs font-bold text-[#FF5252] transition hover:bg-[#FF5252] hover:text-white">
+                      프로필 이미지 변경
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="sr-only"
+                      />
+                    </label>
+                    <p className="mt-2 text-xs text-slate-400">
+                      JPG, PNG 이미지를 선택하면 미리보기에 바로 반영됩니다.
+                    </p>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">이름</label>
                   <input
                     type="text"
-                    value={currentUserName}
-                    readOnly
+                    value={profileForm.fullName}
+                    onChange={(event) => handleProfileFieldChange('fullName', event.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
                   />
                 </div>
@@ -626,15 +891,108 @@ export default function App() {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">이메일 주소</label>
                   <input
                     type="email"
-                    value={currentUserEmail}
-                    readOnly
+                    value={profileForm.email}
+                    onChange={(event) => handleProfileFieldChange('email', event.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
                   />
                 </div>
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700">이메일 알림</span>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 accent-[#FF5252]" />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">전화번호</label>
+                  <input
+                    type="tel"
+                    value={currentUserPhone}
+                    onChange={(event) => handleProfileFieldChange('phone', event.target.value)}
+                    placeholder="010-0000-0000"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
+                  />
                 </div>
+
+                {profileMessage && (
+                  <p
+                    className={`text-sm font-semibold ${
+                      profileMessage.includes('저장') ? 'text-emerald-600' : 'text-[#FF5252]'
+                    }`}
+                  >
+                    {profileMessage}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                  <button
+                    type="button"
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                    className="rounded-xl bg-[#FF5252] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#ff3b3b] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSavingProfile ? '저장 중...' : '저장'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPasswordPanelOpen((current) => !current);
+                      setPasswordMessage('');
+                    }}
+                    className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-[#FF5252] hover:text-[#FF5252]"
+                  >
+                    비밀번호 수정
+                  </button>
+                </div>
+
+                {isPasswordPanelOpen && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          새 비밀번호
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordForm.newPassword}
+                          onChange={(event) =>
+                            setPasswordForm((current) => ({
+                              ...current,
+                              newPassword: event.target.value,
+                            }))
+                          }
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          비밀번호 확인
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(event) =>
+                            setPasswordForm((current) => ({
+                              ...current,
+                              confirmPassword: event.target.value,
+                            }))
+                          }
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-[#FF5252]"
+                        />
+                      </div>
+                    </div>
+                    {passwordMessage && (
+                      <p
+                        className={`mt-3 text-sm font-semibold ${
+                          passwordMessage.includes('변경') ? 'text-emerald-600' : 'text-[#FF5252]'
+                        }`}
+                      >
+                        {passwordMessage}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleUpdatePassword}
+                      disabled={isUpdatingPassword}
+                      className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isUpdatingPassword ? '변경 중...' : '비밀번호 저장'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
