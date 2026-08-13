@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar';
 import { TaskCard } from './components/TaskCard';
 import { TaskDetailView } from './components/TaskDetailView';
 import { TaskStatusCard } from './components/TaskStatusCard';
+import { TaskCalendar } from './components/TaskCalendar';
 import { AddTaskModal } from './components/AddTaskModal';
 import { InviteModal } from './components/InviteModal';
 import { LoginPage } from './components/LoginPage';
@@ -156,6 +157,7 @@ export default function App() {
   
   // Modals
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string | undefined>();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   useEffect(() => {
@@ -381,6 +383,11 @@ export default function App() {
 
   const handleBackToTasks = () => {
     setSelectedTask(null);
+  };
+
+  const handleOpenAddTask = (dueDate?: string) => {
+    setNewTaskDueDate(dueDate);
+    setIsAddTaskModalOpen(true);
   };
 
   const handleInviteMember = (email: string) => {
@@ -687,7 +694,7 @@ export default function App() {
                     </div>
 
                     <button
-                      onClick={() => setIsAddTaskModalOpen(true)}
+                      onClick={() => handleOpenAddTask()}
                       className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#FF5252] hover:text-[#ff3b3b] hover:bg-red-50 px-3 py-1.5 rounded-xl transition-colors"
                     >
                       <Plus className="w-4 h-4" />
@@ -709,7 +716,7 @@ export default function App() {
                           task={task}
                           onStatusChange={handleStatusChange}
                           onDeleteTask={handleDeleteTask}
-                          onEditTask={() => setIsAddTaskModalOpen(true)}
+                          onEditTask={() => handleOpenAddTask(task.dueDate)}
                           onOpenTask={handleOpenTask}
                         />
                       ))
@@ -758,6 +765,12 @@ export default function App() {
                 </div>
 
               </div>
+
+              <TaskCalendar
+                tasks={tasks}
+                onOpenTask={handleOpenTask}
+                onAddTask={handleOpenAddTask}
+              />
             </div>
           )}
 
@@ -795,7 +808,7 @@ export default function App() {
                   <p className="text-xs text-slate-500">내게 배정된 개인 및 팀 작업입니다.</p>
                 </div>
                 <button
-                  onClick={() => setIsAddTaskModalOpen(true)}
+                  onClick={() => handleOpenAddTask()}
                   className="bg-[#FF5252] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> 작업 추가
@@ -1028,8 +1041,12 @@ export default function App() {
       {/* Modals */}
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
-        onClose={() => setIsAddTaskModalOpen(false)}
+        onClose={() => {
+          setIsAddTaskModalOpen(false);
+          setNewTaskDueDate(undefined);
+        }}
         onAddTask={handleAddTask}
+        initialDueDate={newTaskDueDate}
       />
 
       <InviteModal

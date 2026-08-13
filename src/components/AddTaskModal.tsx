@@ -6,6 +6,7 @@ interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddTask: (task: Omit<Task, 'id'>) => void;
+  initialDueDate?: string;
 }
 
 const DEFAULT_IMAGE =
@@ -24,7 +25,12 @@ const formatDate = (date: Date) => {
   )}/${date.getFullYear()}`;
 };
 
-export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask }) => {
+export const AddTaskModal: React.FC<AddTaskModalProps> = ({
+  isOpen,
+  onClose,
+  onAddTask,
+  initialDueDate,
+}) => {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('Vital');
@@ -32,6 +38,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onA
   const [category, setCategory] = useState('Personal');
   const [status] = useState<TaskStatus>('Not Started');
   const [imageUrl, setImageUrl] = useState('');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setDueDate(initialDueDate ?? '');
+    }
+  }, [initialDueDate, isOpen]);
 
   if (!isOpen) return null;
 
